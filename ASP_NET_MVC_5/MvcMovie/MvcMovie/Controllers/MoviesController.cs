@@ -1,4 +1,6 @@
-﻿using System.Data.Entity;
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Net;
 using System.Web.Mvc;
@@ -8,12 +10,34 @@ namespace MvcMovie.Controllers
 {
     public class MoviesController : Controller
     {
-        private MovieDBContext db = new MovieDBContext();
+        private MovieDbContext db = new MovieDbContext();
 
         // GET: Movies
-        public ActionResult Index()
+        public ActionResult Index(string movieGenre, string searchString)
         {
-            return View(db.Movies.ToList());
+            var genreLst = new List<string>();
+
+            var genreQry = from d in db.Movies
+                orderby d.Genre
+                select d.Genre;
+
+            genreLst.AddRange(genreQry.Distinct());
+            ViewBag.movieGenre = new SelectList(genreLst);
+
+            var movies = from m in db.Movies
+                select m;
+
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                movies = movies.Where(s => s.Title.Contains(searchString));
+            }
+
+            if (!string.IsNullOrEmpty(movieGenre))
+            {
+                movies = movies.Where(x => x.Genre == movieGenre);
+            }
+
+            return View(movies);
         }
 
         // GET: Movies/Details/5
